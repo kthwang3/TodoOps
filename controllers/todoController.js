@@ -26,10 +26,22 @@ const getTodo = async (req, res) => {
   try{
     const found = await Todo.findById(id);
     if(!found) return res.status(404).json({message: 'Task not found'});
-    
+    res.json(found);
+  } catch (err){
+    res.status(500).json({message: err.message});
   }
-  
-
+}
+const updateTodo = async (req, res) => {
+  const id = req.params.id;
+  const done = req
+  try{
+    const updateTodo = await Todo.findByIdAndUpdate(
+      req.params.id,
+      {name: }
+    )
+  } catch (err){
+    res.status(500).json({message: err.message});
+  }
 }
 
 /*
