@@ -33,23 +33,30 @@ const getTodo = async (req, res) => {
 }
 const updateTodo = async (req, res) => {
   const id = req.params.id;
-  const done = req
+  const task = req.body.todo;
+  const done = req.body.completed;
   try{
     const updateTodo = await Todo.findByIdAndUpdate(
       req.params.id,
-      {name: }
+      {todo: task, completed: done},
+      {new: true}
     )
+    if(!updateTodo) return res.status(404).json({message: 'Task not found'});
+    console.log(updateTodo);
+    res.status(200).json({success: 'Task changed!'});
   } catch (err){
     res.status(500).json({message: err.message});
   }
 }
-
-/*
-router.get('/', todoController.getTodos);
-router.post('/', todoController.createTodo);
-router.get('/:id', todoController.getTodo);
-router.put('/:id', todoController.updateTodo);
-router.delete('/:id', todoController.deleteTodo);
-
-module.exports = router;
-*/
+const deleteTodo = async (req, res) => {
+  const id = req.params.id;
+  try{
+    const deleteTodo = await Todo.findByIdAndDelete(id);
+    if(!deleteTodo) return res.status(404).json({message: 'Task not found'});
+    console.log(deleteTodo);
+    res.status(204).send();
+  } catch(err){
+    res.status(500).json({message: err.message});
+  }
+}
+module.exports = {getTodos, createTodo, getTodo, updateTodo, deleteTodo};
