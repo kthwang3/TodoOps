@@ -5,10 +5,10 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/dbConn');
 const PORT = process.env.PORT || 3000;
 
-connectDB();
-app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
+connectDB();
 app.use('/todos', require('./routes/todos'));
 
 mongoose.connection.once('open', () => {
