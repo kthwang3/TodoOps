@@ -1,0 +1,29 @@
+- name: Configure todo app server on EC2
+  hosts: web
+  become: true
+  tasks:
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/app
+        state: directory
+    - name: Install Docker
+      shell: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
+      args:
+        creates: /usr/bin/docker
+    - name: Copy docker-compose.yml to the server
+      copy:
+        src: ../docker-compose.yml
+        dest: /home/ubuntu/app/docker-compose.yml
+    - name: Copy .env to the server
+      copy:
+        src: ../.env
+        dest: /home/ubuntu/app/.env
+    - name: Run docker compose up -d
+      shell:
+        cmd: docker compose up -d
+        chdir: /home/ubuntu/app
+        
+
+
