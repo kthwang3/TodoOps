@@ -25,6 +25,14 @@
       copy:
         src: ../.env
         dest: /home/ubuntu/app/.env
+    - name: Create nginx directory
+      file:
+        path: /home/ubuntu/app/nginx
+        state: directory
+    - name: Copy nginx config to the server
+      copy:
+        src: ../nginx/nginx.conf
+        dest: /home/ubuntu/app/nginx/nginx.conf
     - name: Run docker compose up -d
       shell:
         cmd: docker compose up -d
