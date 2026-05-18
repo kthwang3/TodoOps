@@ -15,7 +15,7 @@ resource "aws_security_group" "todo_app_sg" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["24.84.204.8/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
     description = "Allow HTTP from anywhere"
