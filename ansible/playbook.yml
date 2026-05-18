@@ -12,6 +12,11 @@
         sh get-docker.sh
       args:
         creates: /usr/bin/docker
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
     - name: Copy docker-compose.yml to the server
       copy:
         src: ../docker-compose.yml
