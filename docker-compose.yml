@@ -1,6 +1,6 @@
 services:
   web:
-    build: .
+    image: ${DOCKER_USERNAME}/todo-app:latest
     container_name: node_app
     ports:
       - "3000:3000"

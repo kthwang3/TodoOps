@@ -42,7 +42,7 @@ resource "aws_security_group" "todo_app_sg" {
 resource "aws_instance" "todo_app_server" {
   ami = "ami-091138d0f0d41ff90"
   instance_type = "t3.micro"
-  key_name = "aws-initial"
+  key_name = "todo-app-key"
   vpc_security_group_ids = [aws_security_group.todo_app_sg.id]
   tags = {
     Name = "todo_app_server"
