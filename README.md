@@ -92,6 +92,7 @@ terraform apply
 ``` bash
 ansible-playbook -i inventory.ini playbook.yml
 ```
+This installs Docker, copies config files, and starts the containers.
 
 ### CI/CD
 Every push to `main` automatically:
