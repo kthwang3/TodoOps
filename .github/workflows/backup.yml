@@ -2,6 +2,7 @@ name: database
 on:
   schedule:
     - cron: '0 */12 * * *'
+  workflow_dispatch:
 jobs:
   backup:
     runs-on: ubuntu-latest
