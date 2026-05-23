@@ -6,6 +6,7 @@ TodoOps is a containerized Todo REST API deployed on AWS EC2. It demonstrates a 
 - Create, read, update, and delete your tasks
 - Every task is date-stamped and shows completion status
 - Your list is saved on a cloud database
+- Automated database backups every 12 hours to AWS S3
 
 ### Cloud Highlights
 
@@ -15,6 +16,7 @@ TodoOps is a containerized Todo REST API deployed on AWS EC2. It demonstrates a 
 - Configuration management with Ansible
 - CI/CD pipeline with GitHub Actions
 - Nginx reverse proxy
+- Scheduled database backups to AWS S3 via GitHub Actions
 
 ## Architecture
 
@@ -44,10 +46,13 @@ graph TD
     subgraph CI/CD
         GitHub[GitHub Actions] -->|build + push| DockerHub[Docker Hub]
         GitHub -->|SSH deploy| EC2
+        GitHub -->|every 12 hours| Backup[backup.sh]
+        Backup -->|mongodump + upload| S3[AWS S3]
         Terraform -->|provision| EC2
         Ansible -->|configure| EC2
     end
 ```
+
 ## Tech Stack
 
 | Category | Technologies |
@@ -55,7 +60,7 @@ graph TD
 | Languages & Frameworks | JavaScript, Node.js, Express, Mongoose |
 | Containerization | Docker, Docker Compose |
 | Infrastructure as Code | Terraform, Ansible |
-| Cloud & Hosting | AWS EC2 |
+| Cloud & Hosting | AWS EC2, AWS S3 |
 | CI/CD | GitHub Actions |
 | Database | MongoDB |
 | Web Server | Nginx |
@@ -68,36 +73,47 @@ graph TD
 - Node.js (if running without Docker)
 
 ## Local Development - Run with Docker Compose
-1. Create a '.env' file in the project root:
+1. Create a `.env` file in the project root:
+```
 DATABASE_URI=mongodb://db:27017/tododb
 PORT=3000
 DOCKER_USERNAME=your-dockerhub-username
+```
 
 2. Start up the containers
-``` bash
+```bash
 docker compose up --build
 ```
 The API will be available at `http://localhost:3000/todos`
 
 ## Deployment
-1. Create an EC2 Instance with Terraform. In `/terraform`, run:
-``` bash
+1. Create an EC2 instance with Terraform. In `/terraform`, run:
+```bash
 terraform init
 terraform plan
 terraform apply
 ```
+
 2. Update `ansible/inventory.ini` with the EC2 IP
 
-3. Setup EC2 server with Ansible. In `/ansible`, run:
-``` bash
+3. Set up the EC2 server with Ansible. In `/ansible`, run:
+```bash
 ansible-playbook -i inventory.ini playbook.yml
 ```
-This installs Docker, copies config files, and starts the containers.
+This installs Docker and the AWS CLI, copies config files, and starts the containers.
 
 ### CI/CD
 Every push to `main` automatically:
 - Builds and pushes the Docker image to Docker Hub
 - SSHs into the EC2 and runs `docker compose pull && docker compose up -d`
+
+### Automated Backups
+A scheduled GitHub Actions workflow runs every 12 hours and:
+- SSHes into the EC2
+- Runs `mongodump` inside the MongoDB container
+- Compresses the dump into a `.tar.gz` archive
+- Uploads it to AWS S3 using the AWS CLI
+- Cleans up temporary files
 
 The following GitHub Secrets are required:
 
@@ -107,6 +123,9 @@ The following GitHub Secrets are required:
 | `DOCKER_PASSWORD` | Docker Hub password |
 | `EC2_HOST` | EC2 public IP address |
 | `EC2_SSH_KEY` | Private key contents for SSH access |
+| `AWS_ACCESS_KEY_ID` | IAM user access key for S3 uploads |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key for S3 uploads |
+| `S3_BUCKET_NAME` | S3 bucket name for storing backups |
 
 ## API Endpoints
 
