@@ -3,6 +3,7 @@ kind: PersistentVolume
 metadata:
   name: db-pv
 spec:
+  storageClassName: ""
   capacity:
     storage: 1Gi
   accessModes: 

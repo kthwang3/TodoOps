@@ -4,6 +4,7 @@ metadata:
   name: db-pvc
   namespace: development
 spec:
+  storageClassName: ""
   accessModes: 
     - ReadWriteOnce
   resources:

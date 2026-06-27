@@ -3,5 +3,6 @@ node_modules
 .terraform/
 terraform.tfstate
 terraform.tfstate.backup
-.terraform.lock.hclkubectl
+.terraform.lock.hcl
+kubectl
 kubectl.sha256
