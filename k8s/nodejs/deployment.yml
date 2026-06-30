@@ -24,3 +24,23 @@ spec:
             secretKeyRef:
               name: mongo-secret
               key: DATABASE_URI
+        resources:
+          requests:
+            cpu: 128m
+            memory: 128Mi
+          limits:
+            cpu: 256m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /todos
+            port: 3000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /todos
+            port: 3000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+    
