@@ -1,24 +1,46 @@
 # TodoOps
-TodoOps is a containerized Todo REST API deployed on AWS EC2. It demonstrates a full cloud deployment pipeline — from infrastructure provisioning with Terraform and Ansible to automated deployments via GitHub Actions, all running behind an Nginx reverse proxy.
+
+TodoOps is a containerized Todo REST API built as a full cloud engineering learning project. It was originally deployed on AWS EC2 using Docker Compose, Terraform, Ansible, and GitHub Actions — then migrated to Kubernetes on Minikube to demonstrate container orchestration concepts.
+
+> There is no live deployment currently — the EC2 instance is destroyed. To use the app, run it locally using one of the options below.
 
 ## Key Features
 
-- Create, read, update, and delete your tasks
+- Create, read, update, and delete tasks
 - Every task is date-stamped and shows completion status
-- Your list is saved on a cloud database
-- Automated database backups every 12 hours to AWS S3
+- Data persisted in MongoDB across container restarts
+- Automated database backups every 12 hours to AWS S3 (original EC2 deployment)
 
-### Cloud Highlights
+## Project Highlights
 
-- Full REST API with MongoDB
-- Multi-container Docker Compose
-- Infrastructure as Code with Terraform
-- Configuration management with Ansible
-- CI/CD pipeline with GitHub Actions
-- Nginx reverse proxy
+### Original Deployment (Docker Compose + EC2)
+- Multi-container Docker Compose with Nginx reverse proxy
+- Infrastructure as Code with Terraform (EC2 + security groups)
+- Server configuration with Ansible (Docker, AWS CLI, deploy files)
+- CI/CD pipeline with GitHub Actions (build → push → SSH deploy)
 - Scheduled database backups to AWS S3 via GitHub Actions
 
+### Kubernetes Migration
+- Deployments, Services, ConfigMap, Secrets, Namespace
+- PersistentVolume + PersistentVolumeClaim for MongoDB data
+- Ingress + Nginx Ingress Controller (replaces NodePort)
+- Resource requests and limits on all containers
+- Liveness and readiness probes on all containers
+
 ## Architecture
+
+### Current (Kubernetes)
+
+```mermaid
+graph LR
+    Client -->|HTTP :80| IC[Ingress Controller]
+    IC -->|ClusterIP :80| NP[Nginx pod]
+    NP -->|ClusterIP :3000| AP[Node.js pod]
+    AP -->|ClusterIP :27017| MP[MongoDB pod]
+    MP -->|PVC| PV[(PersistentVolume\n/mnt/data/mongo)]
+```
+
+### Original (Docker Compose on EC2)
 
 ```mermaid
 graph LR
@@ -26,8 +48,6 @@ graph LR
     B -->|port 3000 internal| C[Node.js / Express]
     C -->|port 27017 internal| D[MongoDB]
 ```
-
-## Infrastructure
 
 ```mermaid
 graph TD
@@ -59,55 +79,95 @@ graph TD
 |----------|-------------|
 | Languages & Frameworks | JavaScript, Node.js, Express, Mongoose |
 | Containerization | Docker, Docker Compose |
+| Container Orchestration | Kubernetes (Minikube), kubectl |
 | Infrastructure as Code | Terraform, Ansible |
 | Cloud & Hosting | AWS EC2, AWS S3 |
 | CI/CD | GitHub Actions |
 | Database | MongoDB |
 | Web Server | Nginx |
 
-## Prerequisites
-- Docker Desktop
-- Terraform
-- Ansible
-- AWS CLI + Credentials
-- Node.js (if running without Docker)
+## Run Locally
 
-## Local Development - Run with Docker Compose
+### Option A — Docker Compose (quick)
+
+**Prerequisites:** Docker Desktop
+
 1. Create a `.env` file in the project root:
 ```
 DATABASE_URI=mongodb://db:27017/tododb
-PORT=3000
-DOCKER_USERNAME=your-dockerhub-username
 ```
 
-2. Start up the containers
+2. Start the containers (pulls the pre-built image from Docker Hub):
 ```bash
-docker compose up --build
+docker compose up
 ```
-The API will be available at `http://localhost:3000/todos`
 
-## Deployment
-1. Create an EC2 instance with Terraform. In `/terraform`, run:
+The API will be available at `http://localhost/todos`
+
+---
+
+### Option B — Kubernetes / Minikube (full stack)
+
+**Prerequisites:** Docker Desktop, kubectl, Minikube
+
+1. Start the cluster:
+```bash
+minikube start --driver=docker
+minikube addons enable ingress
+```
+
+2. Apply manifests in order:
+```bash
+kubectl apply -f k8s/namespace.yml
+kubectl apply -f k8s/mongo/persistentvolume.yml
+kubectl apply -f k8s/mongo/persistentvolumeclaim.yml
+kubectl apply -f k8s/mongo/secret.yml
+kubectl apply -f k8s/mongo/
+kubectl apply -f k8s/nodejs/
+kubectl apply -f k8s/nginx/
+kubectl apply -f k8s/ingress.yml
+```
+
+3. Wait for all pods to be ready:
+```bash
+kubectl get pods -n development
+```
+
+4. Get the cluster IP and hit the API:
+```bash
+minikube ip
+curl http://<minikube-ip>/todos
+```
+
+## Original Cloud Deployment (Archived)
+
+> The EC2 instance is currently destroyed and the GitHub Actions deploy/backup workflows are disabled. This section documents the original deployment pipeline.
+
+### Infrastructure (Terraform)
+
+In `/terraform`, run:
 ```bash
 terraform init
 terraform plan
 terraform apply
 ```
 
-2. Update `ansible/inventory.ini` with the EC2 IP
+### Server Setup (Ansible)
 
-3. Set up the EC2 server with Ansible. In `/ansible`, run:
+Update `ansible/inventory.ini` with the EC2 IP, then run:
 ```bash
 ansible-playbook -i inventory.ini playbook.yml
 ```
 This installs Docker and the AWS CLI, copies config files, and starts the containers.
 
-### CI/CD
+### CI/CD (GitHub Actions)
+
 Every push to `main` automatically:
 - Builds and pushes the Docker image to Docker Hub
-- SSHs into the EC2 and runs `docker compose pull && docker compose up -d`
+- SSHes into the EC2 and runs `docker compose pull && docker compose up -d`
 
 ### Automated Backups
+
 A scheduled GitHub Actions workflow runs every 12 hours and:
 - SSHes into the EC2
 - Runs `mongodump` inside the MongoDB container
@@ -115,7 +175,7 @@ A scheduled GitHub Actions workflow runs every 12 hours and:
 - Uploads it to AWS S3 using the AWS CLI
 - Cleans up temporary files
 
-The following GitHub Secrets are required:
+### Required GitHub Secrets
 
 | Secret | Description |
 |--------|-------------|

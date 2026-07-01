@@ -9,7 +9,7 @@ services:
       - web
   web:
     restart: always
-    image: ${DOCKER_USERNAME}/todo-app:latest
+    image: kthwang3/todo-app:latest
     container_name: node_app
     env_file:
       - .env
