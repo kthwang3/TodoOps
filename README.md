@@ -26,6 +26,7 @@ TodoOps is a containerized Todo REST API built as a full cloud engineering learn
 - Ingress + Nginx Ingress Controller (replaces NodePort)
 - Resource requests and limits on all containers
 - Liveness and readiness probes on all containers
+- Helm chart packaging (`k8s/todoops-chart/`) for single-command deployment
 
 ## Architecture
 
@@ -79,7 +80,7 @@ graph TD
 |----------|-------------|
 | Languages & Frameworks | JavaScript, Node.js, Express, Mongoose |
 | Containerization | Docker, Docker Compose |
-| Container Orchestration | Kubernetes (Minikube), kubectl |
+| Container Orchestration | Kubernetes (Minikube), kubectl, Helm |
 | Infrastructure as Code | Terraform, Ansible |
 | Cloud & Hosting | AWS EC2, AWS S3 |
 | CI/CD | GitHub Actions |
@@ -138,6 +139,41 @@ kubectl get pods -n development
 minikube ip
 curl http://<minikube-ip>/todos
 ```
+
+---
+
+### Option C — Helm (single command)
+
+**Prerequisites:** Docker Desktop, kubectl, Minikube, Helm
+
+1. Start the cluster:
+```bash
+minikube start --driver=docker
+minikube addons enable ingress
+```
+
+2. Install the chart:
+```bash
+helm install todoops k8s/todoops-chart
+```
+
+3. Wait for all pods to be ready:
+```bash
+kubectl get pods -n development
+```
+
+4. Hit the API:
+```bash
+curl http://$(minikube ip)/todos
+```
+
+To uninstall:
+```bash
+helm uninstall todoops
+kubectl delete pv db-pv
+```
+
+> Note: `helm uninstall` removes all namespace-scoped resources but not the PersistentVolume (cluster-scoped). Delete it manually if you want a clean slate.
 
 ## Original Cloud Deployment (Archived)
 
