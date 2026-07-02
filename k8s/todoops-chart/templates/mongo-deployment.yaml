@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment  
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.mongo.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: {{ .Values.mongo.image }}
+        ports:
+          - containerPort: 27017
+        volumeMounts:
+          - name: mongo-storage
+            mountPath: /data/db
+        resources:
+          requests: 
+            cpu: {{ .Values.mongo.cpuRequest }}
+            memory: {{ .Values.mongo.memRequest }}
+          limits:
+            cpu: {{ .Values.mongo.cpuLimit }}
+            memory: {{ .Values.mongo.memLimit }}
+        livenessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: {{ .Values.mongo.livenessInitialDelaySeconds }}
+          periodSeconds: {{ .Values.mongo.livenessPeriodSeconds }}
+        readinessProbe:
+          tcpSocket:
+            port: 27017
+          initialDelaySeconds: {{ .Values.mongo.readinessInitialDelaySeconds }}
+          periodSeconds: {{ .Values.mongo.readinessPeriodSeconds }}
+
+      volumes:
+      - name: mongo-storage
+        persistentVolumeClaim:
+          claimName: db-pvc
+
+      

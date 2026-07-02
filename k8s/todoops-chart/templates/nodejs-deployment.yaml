@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment  
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.nodejs.replicas }}
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+      - name: webapp
+        image: {{ .Values.nodejs.image }}
+        ports:
+          - containerPort: 3000
+        env:
+        - name: DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: DATABASE_URI
+        resources:
+          requests:
+            cpu: {{ .Values.nodejs.cpuRequest }}
+            memory: {{ .Values.nodejs.memRequest }}
+          limits:
+            cpu: {{ .Values.nodejs.cpuLimit }}
+            memory: {{ .Values.nodejs.memLimit }}
+        livenessProbe:
+          httpGet:
+            path: /todos
+            port: 3000
+          initialDelaySeconds: {{ .Values.nodejs.livenessInitialDelaySeconds }}
+          periodSeconds: {{ .Values.nodejs.livenessPeriodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: /todos
+            port: 3000
+          initialDelaySeconds: {{ .Values.nodejs.readinessInitialDelaySeconds }}
+          periodSeconds: {{ .Values.nodejs.readinessPeriodSeconds }}
+    

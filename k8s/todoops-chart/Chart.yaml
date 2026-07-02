@@ -1,0 +1,3 @@
+apiVersion: v2
+name: todoops
+version: 1.0.0

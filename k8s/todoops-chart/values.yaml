@@ -1,0 +1,38 @@
+global:
+  namespace: development
+mongo:
+  replicas: 1
+  image: mongo:latest
+  cpuRequest: 250m
+  memRequest: 256Mi
+  cpuLimit: 500m
+  memLimit: 512Mi
+  livenessInitialDelaySeconds: 15
+  livenessPeriodSeconds: 10
+  readinessInitialDelaySeconds: 15
+  readinessPeriodSeconds: 10
+  storageSize: 1Gi
+
+nodejs:
+  replicas: 1
+  image: kthwang3/todo-app:latest
+  cpuRequest: 125m
+  memRequest: 128Mi
+  cpuLimit: 250m
+  memLimit: 256Mi
+  livenessInitialDelaySeconds: 20
+  livenessPeriodSeconds: 10
+  readinessInitialDelaySeconds: 20
+  readinessPeriodSeconds: 10
+
+nginx:
+  replicas: 1
+  image: nginx:1-alpine
+  cpuRequest: 75m
+  memRequest: 64Mi
+  cpuLimit: 150m
+  memLimit: 128Mi
+  livenessInitialDelaySeconds: 10
+  livenessPeriodSeconds: 10
+  readinessInitialDelaySeconds: 10
+  readinessPeriodSeconds: 10
